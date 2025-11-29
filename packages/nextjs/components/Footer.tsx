@@ -6,28 +6,28 @@ import React from "react";
 export const Footer = () => {
   const footerLinks = {
     product: [
-      { name: "Features", href: "#features" },
-      { name: "Staking", href: "#staking" },
-      { name: "Events", href: "#events" },
-      { name: "Rewards", href: "#rewards" },
+      { name: "About", href: "/about" },
+      { name: "Vaults", href: "/vaults" },
+      { name: "Prizes", href: "/prizes" },
+      { name: "Dashboard", href: "/dashboard" },
     ],
     company: [
-      { name: "About Us", href: "#about" },
-      { name: "Team", href: "#team" },
-      { name: "Careers", href: "#careers" },
-      { name: "Contact", href: "#contact" },
+      { name: "About Us", href: "/about" },
+      { name: "Team", href: "/team" },
+      { name: "Careers", href: "/careers" },
+      { name: "Contact", href: "/contact" },
     ],
     resources: [
-      { name: "Documentation", href: "#docs" },
-      { name: "Help Center", href: "#help" },
-      { name: "Community", href: "#community" },
-      { name: "Blog", href: "#blog" },
+      { name: "Documentation", href: "/docs" },
+      { name: "Help Center", href: "/help" },
+      { name: "Community", href: "/community" },
+      { name: "Blog", href: "/blog" },
     ],
     legal: [
-      { name: "Privacy Policy", href: "#privacy" },
-      { name: "Terms of Service", href: "#terms" },
-      { name: "Cookie Policy", href: "#cookies" },
-      { name: "Disclaimer", href: "#disclaimer" },
+      { name: "Privacy Policy", href: "/privacy" },
+      { name: "Terms of Service", href: "/terms" },
+      { name: "Cookie Policy", href: "/cookies" },
+      { name: "Disclaimer", href: "/disclaimer" },
     ],
   };
 
@@ -53,9 +53,7 @@ export const Footer = () => {
                 MEMEPOT
               </span>
             </div>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
-              혁신적인 스테이킹 플랫폼으로 안정적인 수익과 흥미진진한 이벤트를 제공합니다.
-            </p>
+            <p className="text-slate-400 text-sm leading-relaxed max-w-sm">Ready to blow up MemePot?</p>
             {/* Social Links */}
             <div className="flex gap-3">
               {socialLinks.map(social => (
@@ -134,21 +132,6 @@ export const Footer = () => {
                 </li>
               ))}
             </ul>
-          </div>
-        </div>
-
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-slate-800">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-slate-500 text-sm">© 2024 MEMEPOT. All rights reserved.</p>
-            <a
-              href="https://readdy.ai/?origin=logo"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-slate-500 hover:text-cyan-400 text-sm transition-colors cursor-pointer"
-            >
-              Powered by Readdy
-            </a>
           </div>
         </div>
       </div>
