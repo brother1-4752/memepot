@@ -43,7 +43,7 @@ export const Header = () => {
   const pathname = usePathname();
 
   return (
-    <header className="top-0 z-50 bg-gradient-to-b from-[#230b42] to-[#0a0514] backdrop-blur-sm border-b border-slate-800">
+    <header className="top-0 z-50 backdrop-blur-sm border-b border-slate-800">
       <nav className="max-w-7xl mx-auto py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
