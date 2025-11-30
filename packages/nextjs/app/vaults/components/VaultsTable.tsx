@@ -1,6 +1,5 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
+import TransactionProgressModal from "~~/components/TransactionProgressModal";
 
 interface Vault {
   id: string;
@@ -21,8 +20,15 @@ export default function VaultsTable() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [displayCount, setDisplayCount] = useState(8);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedVault, setSelectedVault] = useState<Vault | null>(null);
+  const [depositAmount, setDepositAmount] = useState("");
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [transactionSteps, setTransactionSteps] = useState<
+    Array<{ id: string; label: string; status: "pending" | "processing" | "completed" | "failed" }>
+  >([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -35,6 +41,23 @@ export default function VaultsTable() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Close modal when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        handleCloseModal();
+      }
+    };
+
+    if (selectedVault) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [selectedVault]);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -51,14 +74,14 @@ export default function VaultsTable() {
       { threshold: 0.1 },
     );
 
-    const currentObserver = observerRef.current;
-    if (currentObserver) {
-      observer.observe(currentObserver);
+    const currentObserverRef = observerRef.current;
+    if (currentObserverRef) {
+      observer.observe(currentObserverRef);
     }
 
     return () => {
-      if (currentObserver) {
-        observer.unobserve(currentObserver);
+      if (currentObserverRef) {
+        observer.unobserve(currentObserverRef);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -295,6 +318,61 @@ export default function VaultsTable() {
     }
   };
 
+  const handleDepositClick = (vault: Vault) => {
+    setSelectedVault(vault);
+    setDepositAmount("");
+  };
+
+  const handleCloseModal = () => {
+    setSelectedVault(null);
+    setDepositAmount("");
+  };
+
+  const handleMaxClick = () => {
+    setDepositAmount("1000"); // Example max balance
+  };
+
+  const handleDepositSubmit = () => {
+    // Start transaction process
+    setTransactionSteps([
+      { id: "1", label: "Approve Token", status: "processing" },
+      { id: "2", label: "Send Transaction", status: "pending" },
+    ]);
+    setShowTransactionModal(true);
+    handleCloseModal();
+
+    // Simulate transaction steps
+    setTimeout(() => {
+      setTransactionSteps([
+        { id: "1", label: "Approve Token", status: "completed" },
+        { id: "2", label: "Send Transaction", status: "processing" },
+      ]);
+
+      setTimeout(() => {
+        setTransactionSteps([
+          { id: "1", label: "Approve Token", status: "completed" },
+          { id: "2", label: "Send Transaction", status: "completed" },
+        ]);
+
+        setTimeout(() => {
+          setShowTransactionModal(false);
+        }, 1500);
+      }, 2000);
+    }, 2000);
+  };
+
+  const calculateEstimatedTickets = (amount: string) => {
+    if (!amount || parseFloat(amount) <= 0 || !selectedVault) return 0;
+    // Estimate: 1 ticket per $10 deposited (example calculation)
+    return Math.floor(parseFloat(amount) / 10);
+  };
+
+  const calculateAnnualReturn = (amount: string) => {
+    if (!amount || parseFloat(amount) <= 0 || !selectedVault) return "0.00";
+    const annual = (parseFloat(amount) * parseFloat(selectedVault.baseAPR)) / 100;
+    return annual.toFixed(2);
+  };
+
   return (
     <div className="space-y-6">
       {/* Info Cards */}
@@ -391,6 +469,203 @@ export default function VaultsTable() {
         </div>
       </div>
 
+      {/* Deposit Modal */}
+      {selectedVault && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div
+            ref={modalRef}
+            className="relative bg-gradient-to-br from-[#1a0f2e] to-[#0f0820] border border-[#AD47FF]/30 rounded-2xl p-8 w-full max-w-lg max-h-[80vh] overflow-y-auto mx-4 shadow-2xl"
+          >
+            {/* Close Button */}
+            <button
+              onClick={handleCloseModal}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer"
+            >
+              <i className="ri-close-line text-xl"></i>
+            </button>
+
+            {/* Header */}
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-white mb-3">Deposit {selectedVault.token}</h2>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 bg-[#AD47FF]/20 text-[#AD47FF] rounded-full border border-[#AD47FF]/30 text-xs font-medium">
+                  {selectedVault.chain}
+                </span>
+                <span className="text-sm text-gray-400">•</span>
+                <span className="text-sm text-gray-400">{selectedVault.name}</span>
+              </div>
+            </div>
+
+            {/* Input Section */}
+            <div className="space-y-4 mb-6">
+              {/* Amount Input */}
+              <div className="bg-[#0f0820]/60 border border-gray-700/50 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm text-gray-400 font-medium">Deposit Amount</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-400">
+                      Balance: <span className="text-white font-semibold">1,000</span>
+                    </span>
+                    <button
+                      onClick={handleMaxClick}
+                      className="px-2 py-1 text-xs text-[#AD47FF] hover:text-pink-400 transition-colors cursor-pointer font-bold bg-[#AD47FF]/10 rounded border border-[#AD47FF]/30 hover:bg-[#AD47FF]/20"
+                    >
+                      MAX
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    value={depositAmount}
+                    onChange={e => setDepositAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="flex-1 bg-transparent text-white text-3xl font-bold outline-none placeholder-gray-600"
+                  />
+                  <div className="flex items-center gap-2 px-3 py-2 bg-[#AD47FF]/10 rounded-lg border border-[#AD47FF]/20 shrink-0">
+                    <span className="text-xl">{selectedVault.icon}</span>
+                    <span className="text-white font-semibold text-sm">{selectedVault.token}</span>
+                  </div>
+                </div>
+                <div className="mt-2 text-sm text-gray-500">
+                  ≈ ${depositAmount ? (parseFloat(depositAmount) * 1).toFixed(2) : "0.00"} USD
+                </div>
+              </div>
+
+              {/* APY Breakdown & Benefits */}
+              <div className="bg-gradient-to-br from-[#AD47FF]/5 to-pink-500/5 border border-[#AD47FF]/20 rounded-xl p-4">
+                <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
+                  <i className="ri-pie-chart-line text-[#AD47FF]"></i>
+                  Deposit Summary & Rewards
+                </h3>
+
+                <div className="space-y-3">
+                  {/* Fixed APY */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-sm text-gray-300">Fixed APY Return</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-green-400 font-bold text-sm">{selectedVault.baseAPR}%</div>
+                      <div className="text-xs text-gray-500">~${calculateAnnualReturn(depositAmount)}/year</div>
+                    </div>
+                  </div>
+
+                  {/* Prize Contribution */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-pink-400 rounded-full"></div>
+                      <span className="text-sm text-gray-300">Prize Contribution</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-pink-400 font-bold text-sm">{selectedVault.ticketAPR}%</div>
+                      <div className="text-xs text-gray-500">Converted to tickets</div>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-gray-700/50 my-2"></div>
+
+                  {/* Total APY */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-white font-semibold">Total APY</span>
+                    <div className="text-[#AD47FF] font-bold text-base">
+                      {(parseFloat(selectedVault.baseAPR) + parseFloat(selectedVault.ticketAPR)).toFixed(1)}%
+                    </div>
+                  </div>
+
+                  {/* Estimated Tickets */}
+                  <div className="bg-gradient-to-r from-pink-500/10 to-[#AD47FF]/10 border border-pink-500/20 rounded-lg p-3 mt-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 flex items-center justify-center bg-pink-500/20 rounded-lg animate-pulse">
+                          <i className="ri-ticket-2-line text-pink-400 text-lg"></i>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-400">Estimated Weekly Tickets</div>
+                          <div className="text-white font-bold text-lg">{calculateEstimatedTickets(depositAmount)}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-400">Win Chance</div>
+                        <div className="text-pink-400 font-semibold text-sm">
+                          {depositAmount && parseFloat(depositAmount) > 0 ? "~0.5%" : "0%"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Safety Guarantee */}
+            <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 flex items-center justify-center flex-shrink-0 bg-green-500/20 rounded-full">
+                  <i className="ri-shield-check-line text-green-400 text-base"></i>
+                </div>
+                <div>
+                  <h4 className="text-white font-bold text-sm mb-1">Withdraw Anytime, No Principal Loss Guaranteed</h4>
+                  <p className="text-gray-300 text-xs leading-relaxed">
+                    Your deposit is always safe and accessible. Only the yield is used for prizes and tickets. You can
+                    withdraw your full principal at any time with no penalties.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Risk Warning */}
+            <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-xl p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <i className="ri-error-warning-line text-orange-400 text-lg"></i>
+                </div>
+                <div>
+                  <h4 className="text-white font-semibold text-sm mb-1">Learn about the risks</h4>
+                  <p className="text-gray-300 text-xs leading-relaxed">
+                    PoolTogether is a permissionless protocol. Prize vaults can be deployed by anyone. Make sure you
+                    know what you are depositing into.{" "}
+                    <span className="text-[#AD47FF] cursor-pointer hover:underline">
+                      Learn more about this prize vault.
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={handleDepositSubmit}
+                disabled={!depositAmount || parseFloat(depositAmount) <= 0}
+                className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-[#AD47FF] rounded-xl text-white font-bold text-base hover:shadow-[0_0_30px_rgba(173,71,255,0.6)] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
+              >
+                {depositAmount && parseFloat(depositAmount) > 0
+                  ? `Deposit ${depositAmount} ${selectedVault.token}`
+                  : "Enter an amount"}
+              </button>
+
+              {depositAmount && parseFloat(depositAmount) > 0 && (
+                <button
+                  onClick={handleDepositSubmit}
+                  className="w-full py-3 bg-[#AD47FF]/10 border border-[#AD47FF]/30 rounded-xl text-[#AD47FF] font-semibold text-sm hover:bg-[#AD47FF]/20 transition-all cursor-pointer whitespace-nowrap"
+                >
+                  Approve {selectedVault.token}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Transaction Progress Modal */}
+      <TransactionProgressModal
+        isOpen={showTransactionModal}
+        steps={transactionSteps}
+        onClose={() => setShowTransactionModal(false)}
+      />
+
       {/* Table */}
       <div className="bg-[#0f0820]/40 border border-gray-800/50 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
@@ -456,7 +731,10 @@ export default function VaultsTable() {
 
                   {/* Action */}
                   <td className="px-6 py-4 text-center">
-                    <button className="px-5 py-2 bg-gradient-to-r from-pink-500 to-[#AD47FF] rounded-full text-white text-sm font-semibold hover:shadow-[0_0_20px_rgba(173,71,255,0.5)] transition-all whitespace-nowrap cursor-pointer">
+                    <button
+                      onClick={() => handleDepositClick(vault)}
+                      className="px-5 py-2 bg-gradient-to-r from-pink-500 to-[#AD47FF] rounded-full text-white text-sm font-semibold hover:shadow-[0_0_20px_rgba(173,71,255,0.5)] transition-all whitespace-nowrap cursor-pointer"
+                    >
                       Deposit
                     </button>
                   </td>

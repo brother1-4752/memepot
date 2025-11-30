@@ -1,3 +1,5 @@
+"use client";
+
 import VaultsTable from "./components/VaultsTable";
 
 export default function Vaults() {
