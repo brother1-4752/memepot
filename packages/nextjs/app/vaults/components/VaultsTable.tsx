@@ -21,13 +21,13 @@ interface Vault {
   isNative?: boolean;
 }
 
-// Token addresses and config
+// Token addresses and config (deployed on Insectarium network - chainId: 43522)
 const TOKENS: { [key: string]: { address: `0x${string}`; decimals: number } } = {
-  USDT: { address: "0x0f4eAD391dff7f730E2D9247A3D964D2724dF665", decimals: 6 },
-  USDC: { address: "0x2077cB638513369254060b8d488Dd23cD0a97837", decimals: 6 },
+  USDT: { address: "0x2F665Cec0DaC0E41112f4eB575077df443B522B1", decimals: 6 },
+  USDC: { address: "0x7C81888a24b92C7083507dD0747bcC190102418A", decimals: 6 },
 };
 
-const VAULT_MANAGER_ADDRESS = "0x1eB771E8620582AAc92700Dd7b55451De529E760" as `0x${string}`;
+const VAULT_MANAGER_ADDRESS = "0x6E66cA2eb5862637a6Bab4bD7eC1fc9e0e919f2C" as `0x${string}`;
 
 export default function VaultsTable() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -49,6 +49,55 @@ export default function VaultsTable() {
   const { writeContractAsync: writeVault } = useScaffoldWriteContract("VaultManager");
   const { writeContractAsync: writeUSDT } = useScaffoldWriteContract("USDT");
   const { writeContractAsync: writeUSDC } = useScaffoldWriteContract("USDC");
+
+  // Vault data
+  const vaults: Vault[] = [
+    {
+      id: "1",
+      name: "Prize USDT",
+      token: "USDT",
+      tokenContract: "USDT",
+      icon: "💵",
+      maxPrize: "Up to $50,000",
+      baseAPR: "4.2",
+      ticketAPR: "2.8",
+      totalDeposits: "$3,200,000",
+      chain: "Memecore",
+      volume24h: "$890,123",
+      decimals: 6,
+      isNative: false,
+    },
+    {
+      id: "2",
+      name: "Prize USDC",
+      token: "USDC",
+      tokenContract: "USDC",
+      icon: "💎",
+      maxPrize: "Up to $75,000",
+      baseAPR: "5.1",
+      ticketAPR: "3.2",
+      totalDeposits: "$1,890,000",
+      chain: "Memecore",
+      volume24h: "$4,567,890",
+      decimals: 6,
+      isNative: false,
+    },
+    {
+      id: "3",
+      name: "Prize MEME",
+      token: "MEME",
+      tokenContract: "NATIVE",
+      icon: "🔥",
+      maxPrize: "Up to $100,000",
+      baseAPR: "3.8",
+      ticketAPR: "2.5",
+      totalDeposits: "$5,120,000",
+      chain: "Memecore",
+      volume24h: "$1,234,567",
+      decimals: 18,
+      isNative: true,
+    },
+  ];
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -106,54 +155,6 @@ export default function VaultsTable() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, displayCount]);
-
-  const vaults: Vault[] = [
-    {
-      id: "1",
-      name: "Prize USDT",
-      token: "USDT",
-      tokenContract: "USDT",
-      icon: "💵",
-      maxPrize: "Up to $50,000",
-      baseAPR: "4.2",
-      ticketAPR: "2.8",
-      totalDeposits: "$3,200,000",
-      chain: "Memecore",
-      volume24h: "$890,123",
-      decimals: 6,
-      isNative: false,
-    },
-    {
-      id: "2",
-      name: "Prize USDC",
-      token: "USDC",
-      tokenContract: "USDC",
-      icon: "💎",
-      maxPrize: "Up to $75,000",
-      baseAPR: "5.1",
-      ticketAPR: "3.2",
-      totalDeposits: "$1,890,000",
-      chain: "Memecore",
-      volume24h: "$4,567,890",
-      decimals: 6,
-      isNative: false,
-    },
-    {
-      id: "3",
-      name: "Prize MEME",
-      token: "MEME",
-      tokenContract: "NATIVE",
-      icon: "🔥",
-      maxPrize: "Up to $100,000",
-      baseAPR: "3.8",
-      ticketAPR: "2.5",
-      totalDeposits: "$5,120,000",
-      chain: "Memecore",
-      volume24h: "$1,234,567",
-      decimals: 18,
-      isNative: true,
-    },
-  ];
 
   const filteredVaults = vaults.filter(
     vault =>
