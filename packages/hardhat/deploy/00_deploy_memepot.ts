@@ -137,40 +137,71 @@ const deployMemePot: DeployFunction = async function (hre: HardhatRuntimeEnviron
   console.log("\n🏦 Creating Vaults...");
 
   const vaultConfigs = [
-    { symbol: "USDT", baseAPR: 420, ticketAPR: 280, maxDeposit: "1000000", decimals: 6 },
-    { symbol: "USDC", baseAPR: 510, ticketAPR: 320, maxDeposit: "1000000", decimals: 6 },
-    { symbol: "WETH", baseAPR: 380, ticketAPR: 250, maxDeposit: "1000", decimals: 18 },
-    { symbol: "DAI", baseAPR: 790, ticketAPR: 450, maxDeposit: "1000000", decimals: 18 },
-    { symbol: "MATIC", baseAPR: 650, ticketAPR: 380, maxDeposit: "5000000", decimals: 18 },
-    { symbol: "LINK", baseAPR: 580, ticketAPR: 340, maxDeposit: "100000", decimals: 18 },
-    { symbol: "MKR", baseAPR: 490, ticketAPR: 310, maxDeposit: "10000", decimals: 18 },
-    { symbol: "YFI", baseAPR: 720, ticketAPR: 410, maxDeposit: "1000", decimals: 18 },
-    { symbol: "COMP", baseAPR: 610, ticketAPR: 360, maxDeposit: "50000", decimals: 18 },
-    { symbol: "AAVE", baseAPR: 560, ticketAPR: 330, maxDeposit: "100000", decimals: 18 },
-    { symbol: "WBTC", baseAPR: 410, ticketAPR: 270, maxDeposit: "100", decimals: 8 },
-    { symbol: "BAL", baseAPR: 670, ticketAPR: 390, maxDeposit: "200000", decimals: 18 },
-    { symbol: "CRV", baseAPR: 730, ticketAPR: 420, maxDeposit: "500000", decimals: 18 },
-    { symbol: "SNX", baseAPR: 640, ticketAPR: 370, maxDeposit: "300000", decimals: 18 },
-    { symbol: "SUSHI", baseAPR: 690, ticketAPR: 400, maxDeposit: "500000", decimals: 18 },
-    { symbol: "UNI", baseAPR: 540, ticketAPR: 320, maxDeposit: "200000", decimals: 18 },
+    { id: 1, name: "Tether USD Vault", symbol: "USDT", apr: 700, chain: "Ethereum", decimals: 6, isNative: false },
+    { id: 2, name: "USD Coin Vault", symbol: "USDC", apr: 830, chain: "Ethereum", decimals: 6, isNative: false },
+    { id: 3, name: "Wrapped Ether Vault", symbol: "WETH", apr: 630, chain: "Ethereum", decimals: 18, isNative: false },
+    { id: 4, name: "Dai Stablecoin Vault", symbol: "DAI", apr: 1240, chain: "Ethereum", decimals: 18, isNative: false },
+    { id: 5, name: "Wrapped Matic Vault", symbol: "MATIC", apr: 1030, chain: "Polygon", decimals: 18, isNative: false },
+    {
+      id: 6,
+      name: "ChainLink Token Vault",
+      symbol: "LINK",
+      apr: 920,
+      chain: "Ethereum",
+      decimals: 18,
+      isNative: false,
+    },
+    { id: 7, name: "Maker Vault", symbol: "MKR", apr: 800, chain: "Ethereum", decimals: 18, isNative: false },
+    { id: 8, name: "yearn.finance Vault", symbol: "YFI", apr: 1130, chain: "Ethereum", decimals: 18, isNative: false },
+    { id: 9, name: "Compound Vault", symbol: "COMP", apr: 970, chain: "Ethereum", decimals: 18, isNative: false },
+    { id: 10, name: "Aave Token Vault", symbol: "AAVE", apr: 890, chain: "Ethereum", decimals: 18, isNative: false },
+    { id: 11, name: "Wrapped Bitcoin Vault", symbol: "WBTC", apr: 680, chain: "Bitcoin", decimals: 8, isNative: false },
+    { id: 12, name: "Balancer Vault", symbol: "BAL", apr: 1060, chain: "Ethereum", decimals: 18, isNative: false },
+    {
+      id: 13,
+      name: "Curve DAO Token Vault",
+      symbol: "CRV",
+      apr: 1150,
+      chain: "Ethereum",
+      decimals: 18,
+      isNative: false,
+    },
+    {
+      id: 14,
+      name: "Synthetix Network Token Vault",
+      symbol: "SNX",
+      apr: 1010,
+      chain: "Ethereum",
+      decimals: 18,
+      isNative: false,
+    },
+    { id: 15, name: "SushiToken Vault", symbol: "SUSHI", apr: 1090, chain: "Ethereum", decimals: 18, isNative: false },
+    { id: 16, name: "Uniswap Vault", symbol: "UNI", apr: 860, chain: "Ethereum", decimals: 18, isNative: false },
   ];
 
   for (const config of vaultConfigs) {
     await VaultManager.createVault(
+      config.id,
+      config.name,
+      config.symbol,
       deployedTokens[config.symbol].address,
-      config.baseAPR,
-      config.ticketAPR,
-      hre.ethers.parseUnits(config.maxDeposit, config.decimals),
+      config.apr,
+      config.chain,
+      config.decimals,
+      config.isNative,
     );
-    console.log(`✅ ${config.symbol} Vault: ${config.baseAPR / 100}% Base + ${config.ticketAPR / 100}% Ticket`);
+    console.log(`✅ ${config.symbol} Vault: ${config.apr / 100}% APR`);
   }
 
   // Configure yield for all tokens
   console.log("\n📈 Configuring Yield...");
 
   for (const config of vaultConfigs) {
-    await YieldGenerator.configureYield(deployedTokens[config.symbol].address, config.baseAPR, config.ticketAPR);
-    console.log(`✅ ${config.symbol} Yield configured`);
+    // Split APR into base and ticket (60/40 split)
+    const baseAPR = Math.floor(config.apr * 0.6);
+    const ticketAPR = config.apr - baseAPR;
+    await YieldGenerator.configureYield(deployedTokens[config.symbol].address, baseAPR, ticketAPR);
+    console.log(`✅ ${config.symbol} Yield configured: ${baseAPR / 100}% Base + ${ticketAPR / 100}% Ticket`);
   }
 
   // Set prices

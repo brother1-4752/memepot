@@ -4188,7 +4188,7 @@ const deployedContracts = {
       deployedOnBlock: 2786208,
     },
     PrizePoolManager: {
-      address: "0xEbca9eCDc7B5E42710A9923b6960594dC96208ea",
+      address: "0xd13b2eE974E1219736F4666656cB6744d6bd038E",
       abi: [
         {
           inputs: [
@@ -4292,6 +4292,31 @@ const deployedContracts = {
             },
             {
               indexed: false,
+              internalType: "bytes32",
+              name: "commitHash",
+              type: "bytes32",
+            },
+          ],
+          name: "DrawCommitted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "poolId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "drawNumber",
+              type: "uint256",
+            },
+            {
+              indexed: false,
               internalType: "address[]",
               name: "winners",
               type: "address[]",
@@ -4304,6 +4329,31 @@ const deployedContracts = {
             },
           ],
           name: "DrawExecuted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "poolId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "drawNumber",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "bytes32",
+              name: "randomness",
+              type: "bytes32",
+            },
+          ],
+          name: "DrawRevealed",
           type: "event",
         },
         {
@@ -4566,6 +4616,45 @@ const deployedContracts = {
         },
         {
           inputs: [],
+          name: "MAX_TICKETS_PER_TX",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "MAX_WINNERS_PER_DRAW",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "MIN_COMMIT_REVEAL_DELAY",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
           name: "OPERATOR_ROLE",
           outputs: [
             {
@@ -4586,6 +4675,24 @@ const deployedContracts = {
             },
           ],
           name: "claimPrize",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "poolId",
+              type: "uint256",
+            },
+            {
+              internalType: "bytes32",
+              name: "commitHash",
+              type: "bytes32",
+            },
+          ],
+          name: "commitDraw",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",
@@ -4622,6 +4729,40 @@ const deployedContracts = {
             },
           ],
           stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "drawCommits",
+          outputs: [
+            {
+              internalType: "bytes32",
+              name: "commitHash",
+              type: "bytes32",
+            },
+            {
+              internalType: "uint256",
+              name: "commitTime",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "revealed",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
           type: "function",
         },
         {
@@ -4687,6 +4828,11 @@ const deployedContracts = {
               internalType: "uint256",
               name: "poolId",
               type: "uint256",
+            },
+            {
+              internalType: "bytes32",
+              name: "secret",
+              type: "bytes32",
             },
             {
               internalType: "address[]",
@@ -4801,9 +4947,9 @@ const deployedContracts = {
                   type: "address",
                 },
                 {
-                  internalType: "uint256",
-                  name: "totalPrize",
-                  type: "uint256",
+                  internalType: "enum PrizePoolManager.PoolStatus",
+                  name: "status",
+                  type: "uint8",
                 },
                 {
                   internalType: "enum PrizePoolManager.DrawFrequency",
@@ -4811,39 +4957,39 @@ const deployedContracts = {
                   type: "uint8",
                 },
                 {
-                  internalType: "uint256",
+                  internalType: "uint96",
+                  name: "totalPrize",
+                  type: "uint96",
+                },
+                {
+                  internalType: "uint32",
                   name: "drawInterval",
-                  type: "uint256",
+                  type: "uint32",
                 },
                 {
-                  internalType: "uint256",
+                  internalType: "uint48",
                   name: "nextDrawTime",
-                  type: "uint256",
+                  type: "uint48",
                 },
                 {
-                  internalType: "uint256",
+                  internalType: "uint48",
                   name: "lastDrawTime",
-                  type: "uint256",
+                  type: "uint48",
                 },
                 {
-                  internalType: "enum PrizePoolManager.PoolStatus",
-                  name: "status",
-                  type: "uint8",
-                },
-                {
-                  internalType: "uint256",
+                  internalType: "uint64",
                   name: "totalParticipants",
-                  type: "uint256",
+                  type: "uint64",
                 },
                 {
-                  internalType: "uint256",
+                  internalType: "uint64",
                   name: "totalTickets",
-                  type: "uint256",
+                  type: "uint64",
                 },
                 {
-                  internalType: "uint256",
+                  internalType: "uint32",
                   name: "drawCount",
-                  type: "uint256",
+                  type: "uint32",
                 },
               ],
               internalType: "struct PrizePoolManager.PrizePool",
@@ -5040,9 +5186,9 @@ const deployedContracts = {
               type: "address",
             },
             {
-              internalType: "uint256",
-              name: "totalPrize",
-              type: "uint256",
+              internalType: "enum PrizePoolManager.PoolStatus",
+              name: "status",
+              type: "uint8",
             },
             {
               internalType: "enum PrizePoolManager.DrawFrequency",
@@ -5050,39 +5196,39 @@ const deployedContracts = {
               type: "uint8",
             },
             {
-              internalType: "uint256",
+              internalType: "uint96",
+              name: "totalPrize",
+              type: "uint96",
+            },
+            {
+              internalType: "uint32",
               name: "drawInterval",
-              type: "uint256",
+              type: "uint32",
             },
             {
-              internalType: "uint256",
+              internalType: "uint48",
               name: "nextDrawTime",
-              type: "uint256",
+              type: "uint48",
             },
             {
-              internalType: "uint256",
+              internalType: "uint48",
               name: "lastDrawTime",
-              type: "uint256",
+              type: "uint48",
             },
             {
-              internalType: "enum PrizePoolManager.PoolStatus",
-              name: "status",
-              type: "uint8",
-            },
-            {
-              internalType: "uint256",
+              internalType: "uint64",
               name: "totalParticipants",
-              type: "uint256",
+              type: "uint64",
             },
             {
-              internalType: "uint256",
+              internalType: "uint64",
               name: "totalTickets",
-              type: "uint256",
+              type: "uint64",
             },
             {
-              internalType: "uint256",
+              internalType: "uint32",
               name: "drawCount",
-              type: "uint256",
+              type: "uint32",
             },
           ],
           stateMutability: "view",
@@ -5271,10 +5417,10 @@ const deployedContracts = {
         supportsInterface: "@openzeppelin/contracts/access/AccessControl.sol",
         paused: "@openzeppelin/contracts/utils/Pausable.sol",
       },
-      deployedOnBlock: 2786210,
+      deployedOnBlock: 2814801,
     },
     RewardsManager: {
-      address: "0xAAaE5C211daf83EaE09cd728f4b45007B06d33f4",
+      address: "0x212205334fbfCAb0fD33e2fC7efD0E777297264F",
       abi: [
         {
           inputs: [
@@ -5583,6 +5729,19 @@ const deployedContracts = {
               internalType: "bytes32",
               name: "",
               type: "bytes32",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "MAX_TOKENS_PER_CLAIM",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
             },
           ],
           stateMutability: "view",
@@ -5957,19 +6116,19 @@ const deployedContracts = {
           name: "userRewards",
           outputs: [
             {
-              internalType: "uint256",
+              internalType: "uint128",
               name: "accruedReward",
-              type: "uint256",
+              type: "uint128",
             },
             {
-              internalType: "uint256",
+              internalType: "uint64",
               name: "lastUpdateTime",
-              type: "uint256",
+              type: "uint64",
             },
             {
-              internalType: "uint256",
+              internalType: "uint128",
               name: "rewardDebt",
-              type: "uint256",
+              type: "uint128",
             },
           ],
           stateMutability: "view",
@@ -5999,7 +6158,7 @@ const deployedContracts = {
         supportsInterface: "@openzeppelin/contracts/access/AccessControl.sol",
         paused: "@openzeppelin/contracts/utils/Pausable.sol",
       },
-      deployedOnBlock: 2786207,
+      deployedOnBlock: 2814798,
     },
     SNX: {
       address: "0x553f17C52b1E875Fb873a7b5B4f6Ee92F2d3157E",
@@ -9340,7 +9499,7 @@ const deployedContracts = {
       deployedOnBlock: 2786189,
     },
     VaultManager: {
-      address: "0x6E66cA2eb5862637a6Bab4bD7eC1fc9e0e919f2C",
+      address: "0xab1F47cD2BCe0e960e5b4718190d7BB1cE013A30",
       abi: [
         {
           inputs: [],
@@ -9638,6 +9797,56 @@ const deployedContracts = {
               type: "uint256",
             },
           ],
+          name: "WithdrawalClaimed",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "token",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "WithdrawalPending",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "token",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
           name: "Withdrawn",
           type: "event",
         },
@@ -9700,26 +9909,53 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [],
+          name: "claimPendingWithdrawal",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
           inputs: [
             {
+              internalType: "uint256",
+              name: "id",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "name",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "tokenSymbol",
+              type: "string",
+            },
+            {
               internalType: "address",
-              name: "token",
+              name: "tokenContract",
               type: "address",
             },
             {
               internalType: "uint256",
-              name: "baseAPR",
+              name: "apr",
               type: "uint256",
             },
             {
-              internalType: "uint256",
-              name: "ticketAPR",
-              type: "uint256",
+              internalType: "string",
+              name: "chain",
+              type: "string",
             },
             {
-              internalType: "uint256",
-              name: "maxDepositPerUser",
-              type: "uint256",
+              internalType: "uint8",
+              name: "decimals",
+              type: "uint8",
+            },
+            {
+              internalType: "bool",
+              name: "isNative",
+              type: "bool",
             },
           ],
           name: "createVault",
@@ -9821,9 +10057,29 @@ const deployedContracts = {
             {
               components: [
                 {
-                  internalType: "bool",
-                  name: "isActive",
-                  type: "bool",
+                  internalType: "uint256",
+                  name: "id",
+                  type: "uint256",
+                },
+                {
+                  internalType: "string",
+                  name: "name",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "token",
+                  type: "string",
+                },
+                {
+                  internalType: "address",
+                  name: "tokenContract",
+                  type: "address",
+                },
+                {
+                  internalType: "uint256",
+                  name: "apr",
+                  type: "uint256",
                 },
                 {
                   internalType: "uint256",
@@ -9831,19 +10087,24 @@ const deployedContracts = {
                   type: "uint256",
                 },
                 {
-                  internalType: "uint256",
-                  name: "baseAPR",
-                  type: "uint256",
+                  internalType: "string",
+                  name: "chain",
+                  type: "string",
                 },
                 {
                   internalType: "uint256",
-                  name: "ticketAPR",
+                  name: "volume24h",
                   type: "uint256",
                 },
                 {
-                  internalType: "uint256",
-                  name: "maxDepositPerUser",
-                  type: "uint256",
+                  internalType: "uint8",
+                  name: "decimals",
+                  type: "uint8",
+                },
+                {
+                  internalType: "bool",
+                  name: "isNative",
+                  type: "bool",
                 },
               ],
               internalType: "struct VaultManager.VaultInfo",
@@ -9911,6 +10172,30 @@ const deployedContracts = {
               internalType: "bool",
               name: "",
               type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "pendingWithdrawals",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
             },
           ],
           stateMutability: "view",
@@ -10045,16 +10330,29 @@ const deployedContracts = {
             },
             {
               internalType: "uint256",
-              name: "baseAPR",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "ticketAPR",
+              name: "apr",
               type: "uint256",
             },
           ],
           name: "updateVaultAPR",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "token",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "volume",
+              type: "uint256",
+            },
+          ],
+          name: "updateVaultVolume",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",
@@ -10075,19 +10373,19 @@ const deployedContracts = {
           name: "userDeposits",
           outputs: [
             {
-              internalType: "uint256",
+              internalType: "uint128",
               name: "amount",
-              type: "uint256",
+              type: "uint128",
             },
             {
-              internalType: "uint256",
+              internalType: "uint64",
               name: "depositTime",
-              type: "uint256",
+              type: "uint64",
             },
             {
-              internalType: "uint256",
+              internalType: "uint64",
               name: "lastRewardClaim",
-              type: "uint256",
+              type: "uint64",
             },
           ],
           stateMutability: "view",
@@ -10104,9 +10402,29 @@ const deployedContracts = {
           name: "vaults",
           outputs: [
             {
-              internalType: "bool",
-              name: "isActive",
-              type: "bool",
+              internalType: "uint256",
+              name: "id",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "name",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "token",
+              type: "string",
+            },
+            {
+              internalType: "address",
+              name: "tokenContract",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "apr",
+              type: "uint256",
             },
             {
               internalType: "uint256",
@@ -10114,19 +10432,24 @@ const deployedContracts = {
               type: "uint256",
             },
             {
-              internalType: "uint256",
-              name: "baseAPR",
-              type: "uint256",
+              internalType: "string",
+              name: "chain",
+              type: "string",
             },
             {
               internalType: "uint256",
-              name: "ticketAPR",
+              name: "volume24h",
               type: "uint256",
             },
             {
-              internalType: "uint256",
-              name: "maxDepositPerUser",
-              type: "uint256",
+              internalType: "uint8",
+              name: "decimals",
+              type: "uint8",
+            },
+            {
+              internalType: "bool",
+              name: "isNative",
+              type: "bool",
             },
           ],
           stateMutability: "view",
@@ -10178,7 +10501,7 @@ const deployedContracts = {
         supportsInterface: "@openzeppelin/contracts/access/AccessControl.sol",
         paused: "@openzeppelin/contracts/utils/Pausable.sol",
       },
-      deployedOnBlock: 2786206,
+      deployedOnBlock: 2814797,
     },
     WBTC: {
       address: "0x8fd7fC02E8Cab582eC8C72317535E539B3B103B3",
@@ -11543,7 +11866,7 @@ const deployedContracts = {
       deployedOnBlock: 2786196,
     },
     YieldGenerator: {
-      address: "0x4758bECc738D7B01655aD54b5dD7A53FDce7ef3F",
+      address: "0x00BF5d63B262747f986Ae39cA59c3Eeb0831632c",
       abi: [
         {
           inputs: [],
@@ -11897,6 +12220,19 @@ const deployedContracts = {
         },
         {
           inputs: [],
+          name: "MAX_HARVEST_BATCH",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
           name: "OPERATOR_ROLE",
           outputs: [
             {
@@ -12059,39 +12395,39 @@ const deployedContracts = {
                   type: "bool",
                 },
                 {
-                  internalType: "uint256",
+                  internalType: "uint16",
                   name: "baseAPR",
-                  type: "uint256",
+                  type: "uint16",
                 },
                 {
-                  internalType: "uint256",
+                  internalType: "uint16",
                   name: "ticketAPR",
-                  type: "uint256",
+                  type: "uint16",
                 },
                 {
-                  internalType: "uint256",
+                  internalType: "uint96",
                   name: "totalDeposited",
-                  type: "uint256",
+                  type: "uint96",
                 },
                 {
-                  internalType: "uint256",
+                  internalType: "uint64",
                   name: "lastHarvestTime",
-                  type: "uint256",
+                  type: "uint64",
                 },
                 {
-                  internalType: "uint256",
+                  internalType: "uint96",
                   name: "totalYieldGenerated",
-                  type: "uint256",
+                  type: "uint96",
                 },
                 {
-                  internalType: "uint256",
+                  internalType: "uint96",
                   name: "totalBaseYield",
-                  type: "uint256",
+                  type: "uint96",
                 },
                 {
-                  internalType: "uint256",
+                  internalType: "uint96",
                   name: "totalTicketYield",
-                  type: "uint256",
+                  type: "uint96",
                 },
               ],
               internalType: "struct YieldGenerator.YieldConfig",
@@ -12134,7 +12470,18 @@ const deployedContracts = {
           type: "function",
         },
         {
-          inputs: [],
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "startIndex",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "batchSize",
+              type: "uint256",
+            },
+          ],
           name: "harvestAll",
           outputs: [],
           stateMutability: "nonpayable",
@@ -12390,39 +12737,39 @@ const deployedContracts = {
               type: "bool",
             },
             {
-              internalType: "uint256",
+              internalType: "uint16",
               name: "baseAPR",
-              type: "uint256",
+              type: "uint16",
             },
             {
-              internalType: "uint256",
+              internalType: "uint16",
               name: "ticketAPR",
-              type: "uint256",
+              type: "uint16",
             },
             {
-              internalType: "uint256",
+              internalType: "uint96",
               name: "totalDeposited",
-              type: "uint256",
+              type: "uint96",
             },
             {
-              internalType: "uint256",
+              internalType: "uint64",
               name: "lastHarvestTime",
-              type: "uint256",
+              type: "uint64",
             },
             {
-              internalType: "uint256",
+              internalType: "uint96",
               name: "totalYieldGenerated",
-              type: "uint256",
+              type: "uint96",
             },
             {
-              internalType: "uint256",
+              internalType: "uint96",
               name: "totalBaseYield",
-              type: "uint256",
+              type: "uint96",
             },
             {
-              internalType: "uint256",
+              internalType: "uint96",
               name: "totalTicketYield",
-              type: "uint256",
+              type: "uint96",
             },
           ],
           stateMutability: "view",
@@ -12443,7 +12790,7 @@ const deployedContracts = {
         supportsInterface: "@openzeppelin/contracts/access/AccessControl.sol",
         paused: "@openzeppelin/contracts/utils/Pausable.sol",
       },
-      deployedOnBlock: 2786209,
+      deployedOnBlock: 2814800,
     },
   },
 } as const;
