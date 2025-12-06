@@ -1,5 +1,5 @@
-import { erc20Abi } from "viem";
-import { useAccount, useBalance, useReadContract } from "wagmi";
+import { useScaffoldReadContract } from "./scaffold-eth";
+import { useAccount, useBalance } from "wagmi";
 
 /**
  * Hook to get user's balance for a specific token
@@ -12,7 +12,7 @@ import { useAccount, useBalance, useReadContract } from "wagmi";
 export function useTokenBalance(tokenAddress: `0x${string}` | undefined, isNative?: boolean) {
   const { address: userAddress } = useAccount();
 
-  // For native token (MEME)
+  // Native token (MEME) → wagmi useBalance
   const nativeBalance = useBalance({
     address: userAddress,
     query: {
@@ -20,12 +20,11 @@ export function useTokenBalance(tokenAddress: `0x${string}` | undefined, isNativ
     },
   });
 
-  // For ERC20 tokens
-  const erc20Balance = useReadContract({
-    address: tokenAddress,
-    abi: erc20Abi,
-    functionName: "balanceOf",
-    args: userAddress ? [userAddress] : undefined,
+  // ERC20 token → TokenBalanceHelper.getUserBalance(user, token)
+  const erc20Balance = useScaffoldReadContract({
+    contractName: "TokenBalanceHelper",
+    functionName: "getUserBalance",
+    args: [userAddress, tokenAddress],
     query: {
       enabled: !isNative && !!tokenAddress && !!userAddress,
     },
@@ -43,30 +42,15 @@ export function useTokenBalance(tokenAddress: `0x${string}` | undefined, isNativ
     };
   }
 
+  const raw = (erc20Balance.data ?? 0n) as bigint;
+
   return {
-    balance: erc20Balance.data || 0n,
-    formatted: erc20Balance.data ? (Number(erc20Balance.data) / 1e6).toFixed(2) : "0", // Assuming 6 decimals for USDT/USDC
+    balance: raw,
+    formatted: Number(raw) ? (Number(raw) / 1e6).toFixed(2) : "0", // USDT/USDC 6 decimals 가정
     symbol: tokenAddress ? "TOKEN" : "",
-    decimals: 6, // Default to 6 for USDT/USDC
+    decimals: 6,
     isLoading: erc20Balance.isLoading,
     error: erc20Balance.error,
     refetch: erc20Balance.refetch,
   };
 }
-
-/**
- * Hook to get user's balance for multiple tokens
- * @param tokens - Array of token addresses with their native flags
- *
- * Note: This hook violates react-hooks/rules-of-hooks when using map.
- * For multiple token balances, call useTokenBalance separately for each token.
- */
-// Commented out to avoid ESLint error
-// export function useMultiTokenBalance(tokens: Array<{ address: `0x${string}`; isNative?: boolean }>) {
-//   const balances = tokens.map(token => useTokenBalance(token.address, token.isNative));
-//   return {
-//     balances,
-//     isLoading: balances.some(b => b.isLoading),
-//     refetchAll: () => balances.forEach(b => b.refetch()),
-//   };
-// }

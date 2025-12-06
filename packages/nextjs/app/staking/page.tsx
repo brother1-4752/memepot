@@ -1,8 +1,40 @@
 "use client";
 
 import StakingTable from "./components/StakingTable";
+import { Staking } from "./types/Staking";
+import { formatUnits } from "viem";
+import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
-export default function Staking() {
+export default function StakingPage() {
+  const { data: stakingPoolList, refetch: refetchStakings } = useScaffoldReadContract({
+    contractName: "StakingManager",
+    functionName: "getAllStakingPoolInfos",
+  });
+
+  const formmatedStakingList: Staking[] =
+    (stakingPoolList as any[] | undefined)?.map(pool => ({
+      id: pool.id.toString(),
+      name: pool.name,
+      token: pool.token,
+      tokenContract: pool.tokenContract,
+      apr: pool.apr.toString(),
+      totalDeposits: formatUnits(pool.totalDeposits, Number(pool.decimals)),
+      chain: "Memecore",
+      volume24h: formatUnits(pool.volume24h, Number(pool.decimals)),
+      decimals: Number(pool.decimals),
+      isNative: pool.isNative,
+    })) ?? [];
+
+  let tvl = 0;
+  let volume24h = 0;
+
+  const stakingTvl = formmatedStakingList.forEach(staking => {
+    tvl += Number(staking.totalDeposits);
+    volume24h += Number(staking.volume24h);
+  });
+
+  console.log(stakingTvl);
+
   return (
     <div className="min-h-screen bg-[#0a0118]">
       {/* Hero Section with Stats */}
@@ -40,25 +72,18 @@ export default function Staking() {
               </p>
             </div>
 
-            {/* TODO: 연동 */}
             {/* Stats Cards */}
             <div className="flex gap-3">
               <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 backdrop-blur-sm border border-purple-500/20 rounded-xl p-5 min-w-[160px]">
                 <div className="text-left">
-                  <div className="text-xs text-gray-400 mb-1.5">7D Volume</div>
-                  <div className="text-xl font-bold text-white">$172,774,670</div>
+                  <div className="text-xs text-gray-400 mb-1.5">TVL</div>
+                  <div className="text-xl font-bold text-white">${tvl.toLocaleString()}</div>
                 </div>
               </div>
               <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 backdrop-blur-sm border border-purple-500/20 rounded-xl p-5 min-w-[160px]">
                 <div className="text-left">
-                  <div className="text-xs text-gray-400 mb-1.5">7D TVL</div>
-                  <div className="text-xl font-bold text-white">$23,450,000</div>
-                </div>
-              </div>
-              <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 backdrop-blur-sm border border-purple-500/20 rounded-xl p-5 min-w-[160px]">
-                <div className="text-left">
-                  <div className="text-xs text-gray-400 mb-1.5">7D Yields</div>
-                  <div className="text-xl font-bold text-white">$131,061</div>
+                  <div className="text-xs text-gray-400 mb-1.5">24H Volume</div>
+                  <div className="text-xl font-bold text-white">${volume24h.toLocaleString()}</div>
                 </div>
               </div>
             </div>
@@ -69,7 +94,7 @@ export default function Staking() {
       {/* Staking Table Section */}
       <div className="relative pb-24 px-6">
         <div className="max-w-7xl mx-auto">
-          <StakingTable />
+          <StakingTable stakingList={formmatedStakingList} refetchStakings={refetchStakings} />
         </div>
       </div>
     </div>

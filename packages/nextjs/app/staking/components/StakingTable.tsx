@@ -1,24 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { formatUnits, parseUnits } from "viem";
+import { Staking } from "../types/Staking";
+import { parseUnits } from "viem";
 import TransactionProgressModal from "~~/components/TransactionProgressModal";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { useMemecorePrice, useTokenPrice } from "~~/hooks/usePriceOracle";
+import { useTokenPrice } from "~~/hooks/usePriceOracle";
 import { useTokenBalance } from "~~/hooks/useTokenBalance";
-import { useAllVaults } from "~~/hooks/useVaultData";
-
-interface Vault {
-  id: string;
-  name: string;
-  token: string;
-  icon: string;
-  apr: string;
-  tokenContract: string;
-  totalDeposits: string;
-  chain: string;
-  volume24h: string;
-  decimals: number;
-  isNative: boolean;
-}
 
 // Token addresses and config (deployed on Insectarium network - chainId: 43522)
 const TOKENS: { [key: string]: { address: `0x${string}`; decimals: number } } = {
@@ -26,15 +12,59 @@ const TOKENS: { [key: string]: { address: `0x${string}`; decimals: number } } = 
   USDC: { address: "0x0D651A847C150d0eE1DB767E661E417dB5E2B09a", decimals: 6 },
 };
 
-const VAULT_MANAGER_ADDRESS = "0x378891c0455CB7b9348537610Be87f00f15Feb70" as `0x${string}`;
+const MockStakingList: Staking[] = [
+  {
+    id: "1",
+    name: "USDT",
+    token: "USDT",
+    tokenContract: "0x2F665Cec0DaC0E41112f4eB575077df443B522B1",
+    apr: "1",
+    totalDeposits: "111",
+    chain: "Memecore",
+    volume24h: "$111",
+    decimals: 6,
+    isNative: false,
+  },
+  {
+    id: "2",
+    name: "USDC",
+    token: "USDC",
+    tokenContract: "0x7C81888a24b92C7083507dD0747bcC190102418A",
+    apr: "1",
+    totalDeposits: "$111",
+    chain: "Memecore",
+    volume24h: "$111",
+    decimals: 6,
+    isNative: false,
+  },
+  {
+    id: "3",
+    name: "MEMECORE",
+    token: "M",
+    tokenContract: "0x1234567890abcdef1234567890abcdef12345678",
+    apr: "2",
+    totalDeposits: "$111",
+    chain: "Memecore",
+    volume24h: "$111",
+    decimals: 18,
+    isNative: true,
+  },
+];
 
-export default function StakingTable() {
+interface StakingTableProps {
+  stakingList: Staking[];
+  refetchStakings: () => void;
+}
+
+const VAULT_MANAGER_ADDRESS = "0x9FA6Be38a26921715996B48C32E42D19DaC366B6" as `0x${string}`;
+
+export default function StakingTable({ stakingList, refetchStakings }: StakingTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"tvl" | "apr" | "24h vol">("apr");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [displayCount, setDisplayCount] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedVault, setSelectedVault] = useState<Vault | null>(null);
+  const [selectedVault, setSelectedVault] = useState<Staking | null>(null);
   const [depositAmount, setDepositAmount] = useState("");
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [transactionSteps, setTransactionSteps] = useState<
@@ -45,47 +75,14 @@ export default function StakingTable() {
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Blockchain write hooks
-  const { writeContractAsync: writeVault } = useScaffoldWriteContract({ contractName: "VaultManager" });
+  const { writeContractAsync: writeNative } = useScaffoldWriteContract({ contractName: "StakingManager" });
   const { writeContractAsync: writeUSDT } = useScaffoldWriteContract({ contractName: "USDT" });
   const { writeContractAsync: writeUSDC } = useScaffoldWriteContract({ contractName: "USDC" });
 
-  // Fetch all vaults from contract
-  const { vaults: contractVaults, refetch: refetchVaults } = useAllVaults();
+  const formmatedStakingList: Staking[] = stakingList.length > 0 ? stakingList : MockStakingList;
 
   // Fetch MEME token price
-  const { priceInUSD: memePriceUSD } = useMemecorePrice();
-
-  // Convert contract vaults to display format
-  const stakingList: Vault[] =
-    contractVaults?.map(vault => {
-      const iconMap: { [key: string]: string } = {
-        USDT: "💵",
-        USDC: "💎",
-        MEME: "⚡",
-      };
-
-      // Format total deposits with proper decimals
-      const totalDepositsFormatted = formatUnits(vault.totalDeposits, vault.decimals);
-      const totalDepositsNum = parseFloat(totalDepositsFormatted);
-
-      // Format volume24h
-      const volume24hFormatted = formatUnits(vault.volume24h, vault.decimals);
-      const volume24hNum = parseFloat(volume24hFormatted);
-
-      return {
-        id: vault.id.toString(),
-        name: vault.name,
-        token: vault.token,
-        tokenContract: vault.tokenContract,
-        icon: iconMap[vault.token] || "🪙",
-        apr: (Number(vault.apr) / 100).toString(), // Convert from basis points (100 = 1%)
-        totalDeposits: `$${totalDepositsNum.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-        chain: vault.chain,
-        volume24h: `$${volume24hNum.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-        decimals: vault.decimals,
-        isNative: vault.isNative,
-      };
-    }) || [];
+  const memePriceUSD = 1.67;
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -120,10 +117,10 @@ export default function StakingTable() {
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting && !isLoading && displayCount < stakingList.length) {
+        if (entries[0].isIntersecting && !isLoading && displayCount < formmatedStakingList.length) {
           setIsLoading(true);
           setTimeout(() => {
-            setDisplayCount(prev => Math.min(prev + 8, stakingList.length));
+            setDisplayCount(prev => Math.min(prev + 8, formmatedStakingList.length));
             setIsLoading(false);
           }, 500);
         }
@@ -141,9 +138,9 @@ export default function StakingTable() {
         observer.unobserve(currentObserverRef);
       }
     };
-  }, [isLoading, displayCount, stakingList.length]);
+  }, [isLoading, displayCount, formmatedStakingList.length]);
 
-  const filteredStaking = stakingList.filter(
+  const filteredStaking = formmatedStakingList.filter(
     vault =>
       vault.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       vault.token.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -180,8 +177,8 @@ export default function StakingTable() {
     }
   };
 
-  const handleDepositClick = (vault: Vault) => {
-    setSelectedVault(vault);
+  const handleDepositClick = (staking: Staking) => {
+    setSelectedVault(staking);
     setDepositAmount("");
   };
 
@@ -223,7 +220,7 @@ export default function StakingTable() {
         handleCloseModal();
 
         // Call depositNative with value
-        await writeVault({
+        await writeNative({
           functionName: "depositNative",
           value: amount,
         });
@@ -233,7 +230,7 @@ export default function StakingTable() {
         setTimeout(() => {
           setShowTransactionModal(false);
           // Refetch vault data after successful transaction
-          refetchVaults();
+          refetchStakings();
           userTokenBalance.refetch();
         }, 1500);
       } else {
@@ -260,7 +257,7 @@ export default function StakingTable() {
         ]);
 
         // Step 2: Deposit to vault
-        await writeVault({
+        await writeNative({
           functionName: "deposit",
           args: [tokenInfo.address, amount],
         });
@@ -273,7 +270,7 @@ export default function StakingTable() {
         setTimeout(() => {
           setShowTransactionModal(false);
           // Refetch vault data after successful transaction
-          refetchVaults();
+          refetchStakings();
           userTokenBalance.refetch();
         }, 1500);
       }
@@ -286,9 +283,16 @@ export default function StakingTable() {
   };
 
   const calculateAnnualReturn = (amount: string) => {
-    if (!amount || parseFloat(amount) <= 0 || !selectedVault) return "0.00";
-    const annual = (parseFloat(amount) * parseFloat(selectedVault.apr)) / 100;
-    return annual.toFixed(2);
+    if (!amount || parseFloat(amount) <= 0) return "0.00";
+    const numAmount = parseFloat(amount);
+
+    if (selectedVault?.isNative) {
+      // Use MEME price
+      return ((numAmount * memePriceUSD * parseFloat(selectedVault.apr)) / 100).toFixed(2);
+    } else {
+      // Use token price from oracle (assuming stablecoins = $1)
+      return (numAmount * (selectedTokenPrice || 1)).toFixed(2);
+    }
   };
 
   // Calculate USD value for deposit amount
@@ -461,7 +465,6 @@ export default function StakingTable() {
                     className="w-[60%] bg-transparent text-white text-3xl font-bold outline-none placeholder-gray-600"
                   />
                   <div className="flex items-center gap-2 px-3 py-2 bg-[#AD47FF]/10 rounded-lg border border-[#AD47FF]/20 shrink-0">
-                    <span className="text-xl">{selectedVault.icon}</span>
                     <span className="text-white font-semibold text-sm">{selectedVault.token}</span>
                   </div>
                 </div>
@@ -486,7 +489,6 @@ export default function StakingTable() {
                       <span className="text-sm text-gray-300">Fixed APR Return</span>
                     </div>
                     <div className="text-right">
-                      {/* TODO: Fixed APY 어떻게 할지 */}
                       <div className="text-green-400 font-bold text-sm">{selectedVault.apr}%</div>
                       <div className="text-xs text-gray-500">~${calculateAnnualReturn(depositAmount)}/year</div>
                     </div>
@@ -499,18 +501,12 @@ export default function StakingTable() {
                       <span className="text-sm text-gray-300">Point Contribution</span>
                     </div>
                     <div className="text-right">
-                      <div className="text-pink-400 font-bold text-sm">{depositAmount} P</div>
+                      <div className="text-pink-400 font-bold text-sm">{calculateUSDValue(depositAmount)} P</div>
                     </div>
                   </div>
 
                   {/* Divider */}
                   <div className="border-t border-gray-700/50 my-2"></div>
-
-                  {/* Total APY */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-white font-semibold">Daily Total Earn Points</span>
-                    <div className="text-[#AD47FF] font-bold text-base">{selectedVault.apr}%</div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -564,44 +560,45 @@ export default function StakingTable() {
               </tr>
             </thead>
             <tbody>
-              {displayedStaking.map((vault, index) => (
+              {displayedStaking.map((staking, index) => (
                 <tr key={index} className="border-b border-gray-800/30 hover:bg-white/5 transition-colors">
                   {/* Pool */}
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-3">
-                      <div className="text-2xl">{vault.icon}</div>
                       <div>
-                        <div className="font-semibold text-white text-sm">{vault.name}</div>
+                        <div className="font-semibold text-white text-sm">{staking.name}</div>
                       </div>
                     </div>
                   </td>
 
                   {/* APR */}
                   <td className="px-6 py-4 text-center">
-                    <div className="font-semibold text-green-400 text-sm">{vault.apr}%</div>
+                    <div className="font-semibold text-green-400 text-sm">{Number(staking.apr).toLocaleString()}%</div>
                   </td>
 
                   {/* Total Deposits */}
                   <td className="px-6 py-4 text-center">
-                    <div className="font-semibold text-white text-sm">{vault.totalDeposits}</div>
+                    <div className="font-semibold text-white text-sm">
+                      {Number(staking.totalDeposits).toLocaleString()}
+                    </div>
                   </td>
 
                   {/* 24h Volume */}
                   <td className="px-6 py-4 text-center">
-                    <div className="font-semibold text-white text-sm">{vault.volume24h}</div>
+                    <div className="font-semibold text-white text-sm">{Number(staking.volume24h).toLocaleString()}</div>
                   </td>
 
                   {/* Chain */}
                   <td className="px-6 py-4 text-center">
                     <span className="text-xs px-2 py-1 bg-[#AD47FF]/20 text-[#AD47FF] rounded-md border border-[#AD47FF]/30 inline-block">
-                      {vault.chain}
+                      {staking.chain}
                     </span>
                   </td>
 
                   {/* Action */}
                   <td className="px-6 py-4 text-center">
                     <button
-                      onClick={() => handleDepositClick(vault)}
+                      onClick={() => handleDepositClick(staking)}
                       className="px-5 py-2 bg-gradient-to-r from-pink-500 to-[#AD47FF] rounded-full text-white text-sm font-semibold hover:shadow-[0_0_20px_rgba(173,71,255,0.5)] transition-all whitespace-nowrap cursor-pointer"
                     >
                       Deposit
