@@ -1,11 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EventPool } from "../types/EventPool";
+// wagmi + rainbowkit 사용하는 경우 예시
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useAccount } from "wagmi";
+import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
 interface PrizePoolCardProps {
   pool: EventPool;
+}
+
+function formatBpsToPercent(bps: bigint | number) {
+  const n = Number(bps);
+  return (n / 100).toFixed(2);
 }
 
 export default function EventPoolCard({ pool }: PrizePoolCardProps) {
@@ -17,6 +26,26 @@ export default function EventPoolCard({ pool }: PrizePoolCardProps) {
     seconds: 0,
   });
   const router = useRouter();
+  const { address, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
+
+  const { data: detailData } = useScaffoldReadContract({
+    contractName: "EventPoolManager",
+    functionName: "getEventPoolDetail",
+    args: [pool.id ? BigInt(pool.id) : undefined, address ?? undefined] as const,
+    query: {
+      enabled: !!pool.id && !!address,
+    },
+  });
+
+  const userInfo = useMemo(() => {
+    if (!detailData) return null;
+    const [, info] = detailData as any;
+    return {
+      userPoints: Number(info.userPoints ?? 0n),
+      winChance: formatBpsToPercent(info.winRateBps ?? 0n),
+    };
+  }, [detailData]);
 
   useEffect(() => {
     setMounted(true);
@@ -45,8 +74,19 @@ export default function EventPoolCard({ pool }: PrizePoolCardProps) {
   }, [pool.nextDraw, mounted]);
 
   const handleViewDetails = () => {
-    router.push(`/eventpool-detail/${pool.tokenAddress ?? undefined}`);
+    router.push(`/eventpool-detail/${pool.id}`);
     window.scrollTo(0, 0);
+  };
+
+  // 버튼 클릭 핸들러: 연결 여부에 따라 분기
+  const handleClickButton = () => {
+    if (!isConnected) {
+      // 지갑 안 연결됐으면 connect 모달만 열고 종료
+      if (openConnectModal) openConnectModal();
+      return;
+    }
+    // 연결돼 있으면 원래 동작
+    handleViewDetails();
   };
 
   const renderParticles = () => {
@@ -146,11 +186,11 @@ export default function EventPoolCard({ pool }: PrizePoolCardProps) {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-[#0a0118]/40 rounded-lg p-4 border border-purple-500/20">
             <p className="text-xs text-gray-500 mb-1">Your Tickets</p>
-            <p className="text-xl font-bold text-white">userInfo에서 가져와</p>
+            <p className="text-xl font-bold text-white">{userInfo?.userPoints.toLocaleString() ?? 0}</p>
           </div>
           <div className="bg-[#0a0118]/40 rounded-lg p-4 border border-purple-500/20">
             <p className="text-xs text-gray-500 mb-1">Win Chance</p>
-            <p className="text-xl font-bold text-green-400">계산해야됨</p>
+            <p className="text-xl font-bold text-green-400">{userInfo?.winChance ?? "0.00"}%</p>
           </div>
         </div>
 
@@ -162,11 +202,11 @@ export default function EventPoolCard({ pool }: PrizePoolCardProps) {
 
         {/* Action Button */}
         <button
-          onClick={handleViewDetails}
+          onClick={handleClickButton}
           className={`w-full py-3 bg-gradient-to-r ${pool.gradient} hover:opacity-90 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2 whitespace-nowrap`}
         >
           <i className="ri-ticket-fill text-lg" />
-          View Prize Details
+          {isConnected ? "View Prize Details" : "Connect wallet"}
           <i className="ri-arrow-right-line" />
         </button>
       </div>

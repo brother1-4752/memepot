@@ -1,6 +1,13 @@
 interface prizeBreakdown {
-  place: number;
+  place: string;
   percentage: number;
+  amount?: string;
+}
+
+interface userStats {
+  userPoints: number;
+  winChance: string;
+  totalTickets: number;
 }
 
 export interface EventPool {
@@ -17,6 +24,7 @@ export interface EventPool {
   totalPoints: number;
   status: "active" | "completed" | "cancelled";
   prizeBreakdown: prizeBreakdown[];
+  userStats?: userStats;
   icon?: string; //front에서 아이콘 지정 가능
   gradient?: string; //front에서 그라데이션 지정 가능
 }

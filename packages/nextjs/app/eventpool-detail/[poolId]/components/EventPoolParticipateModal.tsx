@@ -1,5 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useAccount } from "wagmi";
 import { EventPool } from "~~/app/eventpool/types/EventPool";
+import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+
+function formatBpsToPercent(bps: bigint | number) {
+  const n = Number(bps);
+  return (n / 100).toFixed(2);
+}
 
 interface ParticipateModalProps {
   eventpool: EventPool;
@@ -7,9 +14,18 @@ interface ParticipateModalProps {
 }
 
 export default function EventPoolParticipateModal({ eventpool, onClose }: ParticipateModalProps) {
-  const [newWinChance, setNewWinChance] = useState(0);
+  const [enterPoints, setEnterPoints] = useState<string>("0");
   const [error, setError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const { address } = useAccount();
+
+  const { data: detailData, refetch: refetchDetail } = useScaffoldReadContract({
+    contractName: "EventPoolManager",
+    functionName: "getEventPoolDetail",
+    args: [BigInt(eventpool.id), address] as const,
+  });
+
+  const { writeContractAsync: writeEventPoolManager } = useScaffoldWriteContract("EventPoolManager");
 
   // Close modal when clicking outside
   useEffect(() => {
@@ -25,18 +41,63 @@ export default function EventPoolParticipateModal({ eventpool, onClose }: Partic
     };
   }, [onClose]);
 
-  useEffect(() => {
-    try {
-      // Calculate new win chance based on TotalPoints
-    } catch (err) {
-      setError("Error calculating win chance");
-      console.error("Win chance calculation error:", err);
+  const userInfo = useMemo(() => {
+    if (!detailData) return null;
+    const [, info] = detailData as any;
+    return {
+      userTotalPoints: Number(info.userTotalPoints ?? 0n),
+      userPoints: Number(info.userPoints ?? 0n),
+      totalPoints: Number(info.totalPoints ?? 0n),
+      winRateBps: Number(info.winRateBps ?? 0n),
+    };
+  }, [detailData]);
+
+  const expectedWinChance = useMemo(() => {
+    if (!userInfo) return null;
+
+    const currentUserPoints = BigInt(userInfo.userPoints);
+    const currentTotalPoints = BigInt(userInfo.totalPoints);
+    const extra = BigInt(Number(enterPoints) || 0);
+
+    if (extra <= 0n) return null;
+
+    const newUserPoints = currentUserPoints + extra;
+    const newTotalPoints = currentTotalPoints + extra;
+    if (newTotalPoints === 0n) return null;
+
+    const winBps = (newUserPoints * 10_000n) / newTotalPoints;
+    return formatBpsToPercent(winBps);
+  }, [userInfo, enterPoints]);
+
+  const handleMaxClick = () => {
+    if (userInfo) {
+      setEnterPoints(String(userInfo.userTotalPoints));
     }
-  }, []);
+  };
 
-  const handleMaxClick = () => {};
+  const handleConfirm = async () => {
+    if (!address || !eventpool.id) return;
+    const pts = Number(enterPoints);
+    if (!pts || pts <= 0) {
+      setError("Please enter a valid number of points");
+      return;
+    }
 
-  const handleConfirm = () => {};
+    try {
+      setError(null);
+      const txHash = await writeEventPoolManager({
+        functionName: "enterEventPool",
+        args: [BigInt(eventpool.id), BigInt(pts)] as const,
+      });
+
+      console.log("✅ enterEventPool tx hash:", txHash);
+      await refetchDetail();
+      onClose();
+    } catch (e) {
+      console.error("❌ enterEventPool error", e);
+      setError("Transaction failed. Please try again.");
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -66,14 +127,12 @@ export default function EventPoolParticipateModal({ eventpool, onClose }: Partic
             </h2>
             <p className="text-gray-400">{eventpool.name}</p>
           </div>
-
           {/* Error Message */}
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6">
               <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
-
           {/* Prize Info */}
           <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/30 p-6 mb-6">
             <div className="text-center">
@@ -86,21 +145,18 @@ export default function EventPoolParticipateModal({ eventpool, onClose }: Partic
               </div>
             </div>
           </div>
-
           {/* Points Input */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-300 mb-3">Number of Pointss to Use</label>
+            <label className="block text-sm font-semibold text-gray-300 mb-3">Number of Points to Use</label>
             <div className="relative">
               <input
                 type="number"
-                value={0}
-                onChange={() => {
-                  setNewWinChance(0);
-                }}
+                value={enterPoints}
+                onChange={e => setEnterPoints(e.target.value)}
                 className="w-full bg-[#0a0118]/60 border border-purple-500/30 rounded-xl px-4 py-4 text-white text-lg focus:outline-none focus:border-purple-500/60 transition-all"
                 placeholder="0"
                 min="0"
-                max={1000}
+                max={userInfo?.userTotalPoints ?? 0}
               />
               <button
                 onClick={handleMaxClick}
@@ -110,35 +166,19 @@ export default function EventPoolParticipateModal({ eventpool, onClose }: Partic
               </button>
             </div>
             <div className="flex items-center justify-between mt-2 text-sm">
-              <span className="text-gray-400">Available Pointss</span>
-              <span className="text-white font-semibold">0</span>
+              <span className="text-gray-400">Available Points</span>
+              <span className="text-white font-semibold">{userInfo?.userTotalPoints ?? 0}</span>
             </div>
           </div>
-
           {/* Win Chance Simulation */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-[#0a0118]/60 rounded-xl border border-purple-500/20 p-4">
               <p className="text-xs text-gray-400 mb-2">Current Win Chance</p>
-              <p className="text-2xl font-bold text-gray-300">{eventpool.poolNum}</p>
+              <p className="text-2xl font-bold text-gray-300">{formatBpsToPercent(userInfo?.winRateBps ?? 0)}%</p>
             </div>
             <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl border border-green-500/40 p-4">
               <p className="text-xs text-gray-400 mb-2">New Win Chance</p>
-              <p className="text-2xl font-bold text-green-400">{newWinChance}</p>
-            </div>
-          </div>
-
-          {/* Safety Message */}
-          <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/30 p-4 mb-6">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center shrink-0">
-                <i className="ri-shield-check-fill text-green-400 text-xl"></i>
-              </div>
-              <div>
-                <h4 className="font-bold text-green-400 mb-1">100% Safe & Secure</h4>
-                <p className="text-sm text-gray-300">
-                  Withdraw Anytime, No Principal Loss Guaranteed. Your deposits are always safe and accessible.
-                </p>
-              </div>
+              <p className="text-2xl font-bold text-green-400">{expectedWinChance ? `${expectedWinChance}%` : "-"}</p>
             </div>
           </div>
 
@@ -152,7 +192,7 @@ export default function EventPoolParticipateModal({ eventpool, onClose }: Partic
             </button>
             <button
               onClick={handleConfirm}
-              disabled={true}
+              disabled={!address || !userInfo || Number(enterPoints) <= 0}
               className={`flex-1 py-3 bg-gradient-to-r ${eventpool.gradient} hover:opacity-90 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
             >
               <i className="ri-check-line text-xl"></i>

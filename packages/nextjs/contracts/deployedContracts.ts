@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   43522: {
     EventPoolManager: {
-      address: "0x6cEaa1e3Ce9884a3C0Efa988C71934B9B7eEAe5F",
+      address: "0x23f0e698658E00a8Beab8777161E324775D3C5D4",
       abi: [
         {
           inputs: [
@@ -521,7 +521,7 @@ const deployedContracts = {
         renounceOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
       },
-      deployedOnBlock: 2833900,
+      deployedOnBlock: 2834539,
     },
     MEMECORE: {
       address: "0xc1efE2f90E3547E655c69BcEd0d1Dc9f983Bf9cf",

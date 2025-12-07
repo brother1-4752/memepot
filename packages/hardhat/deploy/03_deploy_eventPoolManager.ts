@@ -54,10 +54,37 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     Cancelled: 2,
   } as const;
 
-  const now = Math.floor(Date.now() / 1000);
-  const oneDay = 24 * 60 * 60;
-  const oneWeek = 7 * oneDay;
-  const oneMonth = 30 * oneDay;
+  // 다음 정각 시간 계산 함수
+  function getNextDrawTime(frequency: number): number {
+    const now = new Date();
+    let nextDraw: Date;
+
+    if (frequency === Frequency.Daily) {
+      // 1D: 다음 날 00:00
+      nextDraw = new Date(now);
+      nextDraw.setDate(nextDraw.getDate() + 1);
+      nextDraw.setHours(0, 0, 0, 0);
+    } else if (frequency === Frequency.Weekly) {
+      // 1W: 다음 주 월요일 00:00
+      nextDraw = new Date(now);
+      const currentDay = nextDraw.getDay(); // 0(일) ~ 6(토)
+      // 월요일(1)까지 남은 일수 계산
+      // 일요일(0)이면 1일 후 = 월요일
+      // 월요일(1)이면 7일 후 = 다음 주 월요일
+      // 화요일(2)이면 6일 후, ..., 토요일(6)이면 2일 후
+      const daysUntilMonday = currentDay === 0 ? 1 : currentDay === 1 ? 7 : 8 - currentDay;
+      nextDraw.setDate(nextDraw.getDate() + daysUntilMonday);
+      nextDraw.setHours(0, 0, 0, 0);
+    } else {
+      // 1M: 다음 달 1일 00:00
+      nextDraw = new Date(now);
+      nextDraw.setMonth(nextDraw.getMonth() + 1);
+      nextDraw.setDate(1);
+      nextDraw.setHours(0, 0, 0, 0);
+    }
+
+    return Math.floor(nextDraw.getTime() / 1000);
+  }
 
   type PoolConfig = {
     rewardToken: string;
@@ -74,7 +101,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       totalPrize: "11500",
       rewardDecimals: 18,
       frequency: Frequency.Daily,
-      nextDrawAt: now + oneDay,
+      nextDrawAt: getNextDrawTime(Frequency.Daily),
       status: PoolStatus.Active,
     },
     {
@@ -82,7 +109,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       totalPrize: "23000",
       rewardDecimals: 18,
       frequency: Frequency.Weekly,
-      nextDrawAt: now + oneWeek,
+      nextDrawAt: getNextDrawTime(Frequency.Weekly),
       status: PoolStatus.Active,
     },
     {
@@ -90,7 +117,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       totalPrize: "34500",
       rewardDecimals: 18,
       frequency: Frequency.Monthly,
-      nextDrawAt: now + oneMonth,
+      nextDrawAt: getNextDrawTime(Frequency.Monthly),
       status: PoolStatus.Active,
     },
     {
@@ -98,7 +125,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       totalPrize: "11500",
       rewardDecimals: 6,
       frequency: Frequency.Daily,
-      nextDrawAt: now + oneDay,
+      nextDrawAt: getNextDrawTime(Frequency.Daily),
       status: PoolStatus.Active,
     },
     {
@@ -106,7 +133,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       totalPrize: "23000",
       rewardDecimals: 6,
       frequency: Frequency.Weekly,
-      nextDrawAt: now + oneWeek,
+      nextDrawAt: getNextDrawTime(Frequency.Weekly),
       status: PoolStatus.Active,
     },
     {
@@ -114,7 +141,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       totalPrize: "160000",
       rewardDecimals: 18,
       frequency: Frequency.Weekly,
-      nextDrawAt: now + oneWeek,
+      nextDrawAt: getNextDrawTime(Frequency.Weekly),
       status: PoolStatus.Active,
     },
   ];

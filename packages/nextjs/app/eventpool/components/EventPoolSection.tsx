@@ -1,6 +1,8 @@
-import { EventPool } from "../types/EventPool";
+"use client";
+
+import { useMemo } from "react";
 import EventPoolCard from "./EventPoolCard";
-import { getNextDraw } from "~~/utils/eventPoolUtils";
+import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
 const poolStyles = {
   "1": { icon: "ri-fire-fill", gradient: "from-orange-500 to-red-500" },
@@ -11,144 +13,84 @@ const poolStyles = {
   "6": { icon: "ri-trophy-fill", gradient: "from-blue-500 to-cyan-500" },
 };
 
-const mockEventPoolsBase: EventPool[] = [
-  {
-    id: "1",
-    poolNum: 1,
-    name: "MEMECORE Pool",
-    tokenSymbol: "MEMECORE",
-    tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    totalPrize: "11,500", // 예: 11,500 M
-    currency: "M",
-    frequency: "1D",
-    nextDraw: getNextDraw("1D").getTime(),
-    participants: 5000,
-    totalPoints: 50000, // 5000명 * 10포인트
-    status: "active",
-    prizeBreakdown: [
-      { place: 1, percentage: 60 },
-      { place: 2, percentage: 30 },
-      { place: 3, percentage: 10 },
-    ],
-  },
-  {
-    id: "2",
-    poolNum: 2,
-    name: "MEMECORE Pool",
-    tokenSymbol: "MEMECORE",
-    tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    totalPrize: "23,000",
-    currency: "M",
-    frequency: "1W",
-    nextDraw: getNextDraw("1W").getTime(),
-    participants: 2000,
-    totalPoints: 40000, // 2000명 * 20포인트
-    status: "active",
-    prizeBreakdown: [
-      { place: 1, percentage: 60 },
-      { place: 2, percentage: 30 },
-      { place: 3, percentage: 10 },
-    ],
-  },
-  {
-    id: "3",
-    poolNum: 3,
-    name: "MEMECORE Pool",
-    tokenSymbol: "MEMECORE",
-    tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    totalPrize: "34,500",
-    currency: "M",
-    frequency: "1M",
-    nextDraw: getNextDraw("1M").getTime(),
-    participants: 1000,
-    totalPoints: 50000, // 1000명 * 50포인트
-    status: "active",
-    prizeBreakdown: [
-      { place: 1, percentage: 60 },
-      { place: 2, percentage: 30 },
-      { place: 3, percentage: 10 },
-    ],
-  },
-  {
-    id: "4",
-    poolNum: 4,
-    name: "USDT Pool",
-    tokenSymbol: "USDT",
-    tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    totalPrize: "11,500",
-    currency: "USDT",
-    frequency: "1D",
-    nextDraw: getNextDraw("1D").getTime(),
-    participants: 3000,
-    totalPoints: 30000, // 3000명 * 10포인트
-    status: "active",
-    prizeBreakdown: [
-      { place: 1, percentage: 60 },
-      { place: 2, percentage: 30 },
-      { place: 3, percentage: 10 },
-    ],
-  },
-  {
-    id: "5",
-    poolNum: 5,
-    name: "USDT Pool",
-    tokenSymbol: "USDT",
-    tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    totalPrize: "23,000",
-    currency: "USDT",
-    frequency: "1W",
-    nextDraw: getNextDraw("1W").getTime(),
-    participants: 1500,
-    totalPoints: 45000, // 1500명 * 30포인트
-    status: "active",
-    prizeBreakdown: [
-      { place: 1, percentage: 60 },
-      { place: 2, percentage: 30 },
-      { place: 3, percentage: 10 },
-    ],
-  },
-  {
-    id: "6",
-    poolNum: 6,
-    name: "NOCMU Special Pool",
-    tokenSymbol: "NOCMU",
-    tokenAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    totalPrize: "160,000",
-    currency: "NOCMU",
-    frequency: "1W",
-    nextDraw: getNextDraw("1W").getTime(),
-    participants: 4000,
-    totalPoints: 120000, // 4000명 * 30포인트
-    status: "active",
-    prizeBreakdown: [
-      { place: 1, percentage: 60 },
-      { place: 2, percentage: 30 },
-      { place: 3, percentage: 10 },
-    ],
-  },
-];
+const FREQUENCY_MAP: Record<number, "1D" | "1W" | "1M"> = {
+  0: "1D",
+  1: "1W",
+  2: "1M",
+};
 
-export const mockEventPools: EventPool[] = mockEventPoolsBase.map(pool => ({
-  ...pool,
-  ...poolStyles[pool.id as keyof typeof poolStyles],
-}));
+const STATUS_MAP: Record<number, "active" | "completed" | "cancelled"> = {
+  0: "active",
+  1: "completed",
+  2: "cancelled",
+};
+
+const TOKEN_INFO: Record<string, { symbol: string; decimals: number }> = {
+  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": { symbol: "MEMECORE", decimals: 18 },
+  "0x201fC8Af6FFa65309BaF2b6607ea4ab039661272": { symbol: "USDT", decimals: 6 },
+  "0xe93408d27914d1a9f4298ec86Dbd2A644CeB1cD9": { symbol: "NOCMU", decimals: 18 },
+};
 
 export default function EventPoolsSection() {
+  const { data: poolsData } = useScaffoldReadContract({
+    contractName: "EventPoolManager",
+    functionName: "getAllEventPools",
+  });
+
+  const pools = useMemo(() => {
+    if (!poolsData) return [];
+    return (poolsData as any[]).map(p => {
+      const tokenAddr = (p.rewardToken as string).toLowerCase();
+      const tokenInfo = Object.entries(TOKEN_INFO).find(([addr]) => addr.toLowerCase() === tokenAddr)?.[1] || {
+        symbol: "MEMECORE",
+        decimals: 18,
+      };
+
+      return {
+        id: String(p.id),
+        poolNum: Number(p.poolNum),
+        name: `${tokenInfo.symbol} Pool`,
+        tokenSymbol: tokenInfo.symbol,
+        tokenAddress: p.rewardToken as string,
+        totalPrize: (Number(p.totalPrize) / 10 ** tokenInfo.decimals).toLocaleString(),
+        currency: tokenInfo.symbol,
+        frequency: FREQUENCY_MAP[Number(p.frequency)] ?? "1D",
+        nextDraw: Number(p.nextDrawAt) * 1000,
+        participants: Number(p.participants),
+        totalPoints: Number(p.totalPoints),
+        status: STATUS_MAP[Number(p.status)] ?? "active",
+        prizeBreakdown: [
+          { place: "1", percentage: 60 },
+          { place: "2", percentage: 30 },
+          { place: "3", percentage: 10 },
+        ],
+        icon: poolStyles[String(Number(p.poolNum)) as keyof typeof poolStyles]?.icon || "ri-fire-fill",
+        gradient:
+          poolStyles[String(Number(p.poolNum)) as keyof typeof poolStyles]?.gradient || "from-orange-500 to-red-500",
+      };
+    });
+  }, [poolsData]);
+
+  console.log(pools);
+
   return (
     <section className="relative px-6 pb-24">
       <div className="max-w-7xl mx-auto">
-        {/* All Pools Grid */}
         <div className="mt-24">
           <h3 className="text-6xl font-bold text-center mb-24">
             <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
               All Active event Prize Pools
             </span>
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {mockEventPools.map(pool => (
-              <EventPoolCard key={pool.id} pool={pool} />
-            ))}
-          </div>
+          {pools.length === 0 ? (
+            <div className="text-center text-gray-400 py-12">Loading event pools...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {pools.map(pool => (
+                <EventPoolCard key={pool.id} pool={pool} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>

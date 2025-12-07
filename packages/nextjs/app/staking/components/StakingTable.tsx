@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Staking } from "../types/Staking";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { parseUnits } from "viem";
+import { useAccount } from "wagmi";
 import TransactionProgressModal from "~~/components/TransactionProgressModal";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useTokenPrice } from "~~/hooks/usePriceOracle";
@@ -70,6 +72,8 @@ export default function StakingTable({ stakingList, refetchStakings }: StakingTa
   const [transactionSteps, setTransactionSteps] = useState<
     Array<{ id: string; label: string; status: "pending" | "processing" | "completed" | "failed" }>
   >([]);
+  const { isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -178,6 +182,11 @@ export default function StakingTable({ stakingList, refetchStakings }: StakingTa
   };
 
   const handleDepositClick = (staking: Staking) => {
+    if (!isConnected) {
+      // 지갑 안 연결됐으면 connect 모달만 열고 종료
+      if (openConnectModal) openConnectModal();
+    }
+
     setSelectedVault(staking);
     setDepositAmount("");
   };
