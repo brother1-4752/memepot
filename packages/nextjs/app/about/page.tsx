@@ -120,35 +120,49 @@ export default function MemePotLanding() {
                   2026 Q1
                 </div>
                 <div className="text-lg text-gray-300 max-md:text-base">Community Building</div>
-                <div className="text-lg text-gray-300 max-md:text-base">
-                  Backend (Smart Contract/Beta) Security Audit
-                </div>
-                <div className="text-lg text-gray-300 max-md:text-base">
-                  MemePot(Swap, Bridge, and Event Pool) Beta Launch
-                </div>
+                <div className="text-lg text-gray-300 max-md:text-base">커뮤니티 빌딩</div>
+                <div className="text-lg text-gray-300 max-md:text-base">밈팟(swap / bridge) 테스트넷 오픈</div>
+                <div className="text-lg text-gray-300 max-md:text-base">밈팟 (event pool) 메인넷 배포(베타)</div>
+                <div className="text-lg text-gray-300 max-md:text-base">파트너십 제안</div>
               </div>
 
               <div className="pl-12 mb-12 relative before:content-[''] before:absolute before:left-[-6px] before:top-2 before:w-[15px] before:h-[15px] before:bg-purple-400 before:rounded-full before:shadow-[0_0_15px_rgba(167,139,250,0.8)]">
                 <div className="text-3xl font-bold bg-gradient-to-br from-purple-400 to-purple-500 bg-clip-text text-transparent mb-3 max-md:text-xl">
                   2026 Q2
                 </div>
-                <div className="text-lg text-gray-300 max-md:text-base">Community Building</div>
-                <div className="text-lg text-gray-300 max-md:text-base">Comprehensive Formal Code Security Audit</div>
-                <div className="text-lg text-gray-300 max-md:text-base">MemePot Alpha Mainnet Launch</div>
+                <div className="text-lg text-gray-300 max-md:text-base">커뮤니티 빌딩</div>
+                <div className="text-lg text-gray-300 max-md:text-base">
+                  밈팟 백엔드 코드(스마트 컨트랙트/베타) 보안감사
+                </div>
+                <div className="text-lg text-gray-300 max-md:text-base">밈팟 정식 오픈(event pool)</div>
+                <div className="text-lg text-gray-300 max-md:text-base">밈팟(swap / bridge) 메인넷 배포(베타)</div>
+                <div className="text-lg text-gray-300 max-md:text-base">파트너십 제안</div>
               </div>
 
               <div className="pl-12 mb-12 relative before:content-[''] before:absolute before:left-[-6px] before:top-2 before:w-[15px] before:h-[15px] before:bg-purple-400 before:rounded-full before:shadow-[0_0_15px_rgba(167,139,250,0.8)]">
                 <div className="text-3xl font-bold bg-gradient-to-br from-purple-400 to-purple-500 bg-clip-text text-transparent mb-3 max-md:text-xl">
                   2026 Q3
                 </div>
-                <div className="text-lg text-gray-300 max-md:text-base">추후 피드백 반영</div>
+                <div className="text-lg text-gray-300 max-md:text-base">커뮤니티 빌딩</div>
+                <div className="text-lg text-gray-300 max-md:text-base">
+                  밈팟 백엔드 코드(스마트 컨트랙트/베타) 보안감사
+                </div>
+                <div className="text-lg text-gray-300 max-md:text-base">커뮤니티 빌딩</div>
+                <div className="text-lg text-gray-300 max-md:text-base">파트너십 제안</div>
+                <div className="text-lg text-gray-300 max-md:text-base">
+                  전체적인 점검(시스템 / 운영인력 / 운영 성과 등)
+                </div>
               </div>
 
               <div className="pl-12 relative before:content-[''] before:absolute before:left-[-6px] before:top-2 before:w-[15px] before:h-[15px] before:bg-purple-400 before:rounded-full before:shadow-[0_0_15px_rgba(167,139,250,0.8)]">
                 <div className="text-3xl font-bold bg-gradient-to-br from-purple-400 to-purple-500 bg-clip-text text-transparent mb-3 max-md:text-xl">
                   2026 Q4
                 </div>
-                <div className="text-lg text-gray-300 max-md:text-base">추후 피드백 반영</div>
+                <div className="text-lg text-gray-300 max-md:text-base">커뮤니티 빌딩</div>
+                <div className="text-lg text-gray-300 max-md:text-base">파트너십 제안</div>
+                <div className="text-lg text-gray-300 max-md:text-base">
+                  밈팟(social-fi pool) 타당성 검토 회의 및 법률적 검토
+                </div>
               </div>
             </div>
           </section>
