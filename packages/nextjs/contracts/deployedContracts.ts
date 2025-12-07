@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   43522: {
     EventPoolManager: {
-      address: "0xeaE48f050A572461BB33Ff15f2973a8e47aD8Bb5",
+      address: "0xDE37A8bBF58a0B1B4BAd8f8b396Bc6Cfb98c6524",
       abi: [
         {
           inputs: [
@@ -59,6 +59,50 @@ const deployedContracts = {
             },
           ],
           name: "OwnershipTransferred",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "oldRewardsManager",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newRewardsManager",
+              type: "address",
+            },
+          ],
+          name: "RewardsManagerUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "poolId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address[]",
+              name: "winners",
+              type: "address[]",
+            },
+            {
+              indexed: false,
+              internalType: "uint256[]",
+              name: "prizeAmounts",
+              type: "uint256[]",
+            },
+          ],
+          name: "WinnersRewarded",
           type: "event",
         },
         {
@@ -355,6 +399,57 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [
+            {
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+          ],
+          name: "getUserEventWins",
+          outputs: [
+            {
+              components: [
+                {
+                  internalType: "uint256",
+                  name: "poolId",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "poolNum",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "rank",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "prizeAmount",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "wonAt",
+                  type: "uint256",
+                },
+                {
+                  internalType: "bool",
+                  name: "claimed",
+                  type: "bool",
+                },
+              ],
+              internalType: "struct EventPoolManager.UserEventWin[]",
+              name: "wins",
+              type: "tuple[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
           inputs: [],
           name: "nextPoolId",
           outputs: [
@@ -408,12 +503,61 @@ const deployedContracts = {
               type: "uint256",
             },
             {
+              internalType: "address[]",
+              name: "winners",
+              type: "address[]",
+            },
+            {
+              internalType: "uint256[]",
+              name: "prizeAmounts",
+              type: "uint256[]",
+            },
+          ],
+          name: "rewardWinners",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "rewardsManager",
+          outputs: [
+            {
+              internalType: "contract IRewardsManager",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "poolId",
+              type: "uint256",
+            },
+            {
               internalType: "enum EventPoolManager.PoolStatus",
               name: "status",
               type: "uint8",
             },
           ],
           name: "setPoolStatus",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_rewardsManager",
+              type: "address",
+            },
+          ],
+          name: "setRewardsManager",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",
@@ -521,7 +665,7 @@ const deployedContracts = {
         renounceOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
       },
-      deployedOnBlock: 2835587,
+      deployedOnBlock: 2836759,
     },
     MEMECORE: {
       address: "0xc1efE2f90E3547E655c69BcEd0d1Dc9f983Bf9cf",
@@ -1202,6 +1346,442 @@ const deployedContracts = {
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
       },
       deployedOnBlock: 2831443,
+    },
+    RewardsManager: {
+      address: "0x13aa57F57E3ce944Fe3594535f2A672F46651E28",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_admin",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "oldAdmin",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newAdmin",
+              type: "address",
+            },
+          ],
+          name: "AdminUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "oldEventPoolManager",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newEventPoolManager",
+              type: "address",
+            },
+          ],
+          name: "EventPoolManagerUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "EventPrizeCredited",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "EventPrizesClaimed",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "from",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "FundsReceived",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "oldStakingManager",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newStakingManager",
+              type: "address",
+            },
+          ],
+          name: "StakingManagerUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "StakingRewardCredited",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "StakingRewardsClaimed",
+          type: "event",
+        },
+        {
+          stateMutability: "payable",
+          type: "fallback",
+        },
+        {
+          inputs: [],
+          name: "admin",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "claimAll",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "claimEventPrizes",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "claimStakingRewards",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "creditEventPrize",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "creditStakingReward",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "eventPoolManager",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+          ],
+          name: "getPendingEventPrizes",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+          ],
+          name: "getPendingStakingRewards",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+          ],
+          name: "getPendingTotals",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "stakingAmount",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "eventAmount",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "total",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "pendingEventPrizes",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "pendingStakingRewards",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "rescueNative",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_admin",
+              type: "address",
+            },
+          ],
+          name: "setAdmin",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_eventPoolManager",
+              type: "address",
+            },
+          ],
+          name: "setEventPoolManager",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_stakingManager",
+              type: "address",
+            },
+          ],
+          name: "setStakingManager",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "stakingManager",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          stateMutability: "payable",
+          type: "receive",
+        },
+      ],
+      inheritedFunctions: {},
+      deployedOnBlock: 2836715,
     },
     StakingManager: {
       address: "0xa5932426FE7369576b37Bb2bE81084C47Cb51308",
@@ -3417,6 +3997,257 @@ const deployedContracts = {
       ],
       inheritedFunctions: {},
       deployedOnBlock: 2830174,
+    },
+    UserDashboard: {
+      address: "0x919796754a2eDc1BF966E3597e30BcA2e2Ddfd30",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_stakingManager",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_eventPoolManager",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_rewardsManager",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "stakingAmount",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "eventAmount",
+              type: "uint256",
+            },
+          ],
+          name: "UserClaimedAll",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "claimAllFromDashboard",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "eventPoolManager",
+          outputs: [
+            {
+              internalType: "contract IEventPoolManager",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+          ],
+          name: "getUserInfo",
+          outputs: [
+            {
+              components: [
+                {
+                  internalType: "address",
+                  name: "userWalletAddress",
+                  type: "address",
+                },
+                {
+                  internalType: "uint256",
+                  name: "totalTickets",
+                  type: "uint256",
+                },
+                {
+                  components: [
+                    {
+                      internalType: "uint256",
+                      name: "stakingPoolId",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "string",
+                      name: "poolName",
+                      type: "string",
+                    },
+                    {
+                      internalType: "string",
+                      name: "tokenSymbol",
+                      type: "string",
+                    },
+                    {
+                      internalType: "address",
+                      name: "tokenAddress",
+                      type: "address",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "stakedAmount",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "apr",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "earned",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "uint64",
+                      name: "stakedAt",
+                      type: "uint64",
+                    },
+                    {
+                      internalType: "uint64",
+                      name: "lastClaimAt",
+                      type: "uint64",
+                    },
+                  ],
+                  internalType: "struct UserDashboard.MyStakingOnchain[]",
+                  name: "myStakings",
+                  type: "tuple[]",
+                },
+                {
+                  components: [
+                    {
+                      internalType: "uint256",
+                      name: "fixedAprRewards",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "eventPoolPrizes",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "totalUnclaimed",
+                      type: "uint256",
+                    },
+                  ],
+                  internalType: "struct UserDashboard.UnclaimedRewardsOnchain",
+                  name: "unclaimedRewards",
+                  type: "tuple",
+                },
+                {
+                  components: [
+                    {
+                      internalType: "uint256",
+                      name: "eventPoolId",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "string",
+                      name: "eventPoolName",
+                      type: "string",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "poolNum",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "rank",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "uint256",
+                      name: "prizeAmount",
+                      type: "uint256",
+                    },
+                    {
+                      internalType: "uint64",
+                      name: "wonAt",
+                      type: "uint64",
+                    },
+                    {
+                      internalType: "uint8",
+                      name: "status",
+                      type: "uint8",
+                    },
+                    {
+                      internalType: "uint64",
+                      name: "claimedAt",
+                      type: "uint64",
+                    },
+                  ],
+                  internalType: "struct UserDashboard.EventPoolWinOnchain[]",
+                  name: "eventPoolWinHistory",
+                  type: "tuple[]",
+                },
+              ],
+              internalType: "struct UserDashboard.UserInfoOnchain",
+              name: "ui",
+              type: "tuple",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "rewardsManager",
+          outputs: [
+            {
+              internalType: "contract IRewardsManagerView",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "stakingManager",
+          outputs: [
+            {
+              internalType: "contract IStakingManager",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
+      deployedOnBlock: 2836716,
     },
   },
 } as const;
